@@ -9,6 +9,8 @@ import os
 import shannonlib.estimators as est
 import shannonlib.gpf_utils as gpf
 
+from tqdm import tqdm
+
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="=== %(levelname)s === %(asctime)s === %(message)s",
@@ -26,24 +28,23 @@ def divergence(sample, chrom=None, data_columns=None, outfile=None, chunksize=No
     regions_data = gpf.get_data(sample['url'], labels=sample['label'],
                                 data_columns=data_columns, regions=regions)
 
+    progress_bar = tqdm(total=len(regions_pct))
+
     for progress, data in zip(regions_pct, regions_data):
 
         if data.empty:
-            print('...{:>5} % (skipped empty region)'.format(progress))
+            progress_bar.set_description('Skipped empty region')
+            progress_bar.update()
             continue
 
-        # data is pandas DF
-        #logging.info(f"Column name of the data: {data.columns}, info: {data.info()}")
-        
         div = est.js_divergence(data)
 
         if div.empty:
-            print('...{:>5} % (skipped low-quality region)'.format(progress))
+            progress_bar.set_description('Skipped low-quality region')
+            progress_bar.update()
             continue
 
-        if not os.path.isfile(outfile):
-            header = True
-        elif os.stat(outfile).st_size == 0:
+        if not os.path.isfile(outfile) or os.stat(outfile).st_size == 0:
             header = True
         else:
             header = False
@@ -52,8 +53,10 @@ def divergence(sample, chrom=None, data_columns=None, outfile=None, chunksize=No
          .round({'JSD_bit_': 3, 'HMIX_bit_': 3})
          .to_csv(outfile, header=header, sep='\t', index=True, mode='a'))
 
-        print('...{:>5} %'.format(progress))
+        progress_bar.set_description('Progress')
+        progress_bar.update()
 
+    progress_bar.close()
     logging.info("The File is created!")
 
     return None
