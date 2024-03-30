@@ -1,0 +1,17 @@
+name: shannon
+channels:
+- bioconda
+- r
+- defaults
+- conda-forge
+dependencies:
+- htslib
+- curl
+- mkl
+- numexpr
+- numpy
+- openssl
+- pandas
+- python=3
+
+
