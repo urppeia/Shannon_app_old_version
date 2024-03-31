@@ -1,9 +1,11 @@
-shannonFiles
-shannonFiles 
-shannonFiles2  
-shannonFiles3
-.snakemake
-\#*
+# Ignore shannonFiles directories
+shannonFiles/
+shannonFiles2/
+shannonFiles3/
+shannonFiles4/
+shannonFiles5/
+
+# Ignore specific files in the paper directory
 paper/auto/
 paper/*.aux
 paper/*.bbl
@@ -13,5 +15,19 @@ paper/*.dvi
 paper/*.log
 paper/*.run.xml
 paper/*.synctex.gz
-									__pycache__/
+
+# Ignore Snakemake files
+.snakemake/
+
+# Ignore Python bytecode files
 *.pyc
+
+# Ignore IPython Notebook checkpoints
+.ipynb_checkpoints
+
+# Ignore files starting with #
+\#*
+
+# Ignore all .csv files
+*.csv
+
