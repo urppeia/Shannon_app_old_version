@@ -23,7 +23,7 @@ logging.basicConfig(format="=== %(levelname)s === %(asctime)s === %(message)s",
 def shannon_entropy(countmatrix, axis=1, method='plug-in'):
     """Shannon entropy (in nat) of the feature frequency profile."""
     
-    logger.debug("Calculating Shannon entropy...")
+    #logger.debug("Calculating Shannon entropy...")
     
     if method == 'plug-in':
         expression = ("sum(where(prob > 0, -prob * log(prob), 0), axis={})"
@@ -32,21 +32,19 @@ def shannon_entropy(countmatrix, axis=1, method='plug-in'):
         prob = countmatrix / count_distribution
         entropy = ne.evaluate(expression)
         
-        logger.debug("Shannon entropy calculation complete.")
+        #logger.debug("Shannon entropy calculation complete.")
         return entropy
 
 
 def js_divergence(indata, weights=None): # indata is DF with multiindex: 
-    """
-    """
 
     LOG2E = np.log2(math.e)
     
-    logger.debug("Calculating count per unit...")
+    #logger.debug("Calculating count per unit...")
     count_per_unit = indata.groupby(level=0, axis=1).sum()
     samplesize = count_per_unit.notnull().sum(axis=1)
     
-    logger.debug("Applying QC filters...")
+    #logger.debug("Applying QC filters...")
     min_samplesize = 2
     min_count = 3
     count_filter = (count_per_unit >= min_count).any(axis=1)
@@ -57,7 +55,7 @@ def js_divergence(indata, weights=None): # indata is DF with multiindex:
     if data.empty:
         return data
     else:
-        logger.debug("Calculating JS divergence...")
+       # logger.debug("Calculating JS divergence...")
         data_unit = count_per_unit[combined_filter]
         data_feature = data.groupby(level=1, axis=1).sum().astype(np.int32)
         
@@ -77,6 +75,6 @@ def js_divergence(indata, weights=None): # indata is DF with multiindex:
         div.insert(1, 'sample size', samplesize[combined_filter])
         div.insert(2, 'HMIX_bit_', LOG2E * mix_entropy)
 
-        logger.debug("JS divergence calculation complete.")
+        #logger.debug("JS divergence calculation complete.")
         
         return div

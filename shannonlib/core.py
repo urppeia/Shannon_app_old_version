@@ -28,6 +28,7 @@ def divergence(sample, chrom=None, data_columns=None, outfile=None, chunksize=No
                                 data_columns=data_columns, regions=regions)
 
     progress_bar = tqdm(total=len(regions_pct))
+    #logger.debug("Calculating JS divergence for the current region...")
 
     for progress, data in zip(regions_pct, regions_data):
 
@@ -36,7 +37,6 @@ def divergence(sample, chrom=None, data_columns=None, outfile=None, chunksize=No
             progress_bar.update()
             continue
 
-        logger.debug("Calculating JS divergence for the current region...")
         div = est.js_divergence(data)
 
         if div.empty:
