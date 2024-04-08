@@ -1,3 +1,26 @@
+"""Utility functions for handling genome position files.
+"""
+
+import logging
+import math
+import subprocess
+
+import numpy as np
+import pandas as pd
+
+
+class InputMismatchError(Exception):
+    pass
+
+
+class MissingInputError(Exception):
+    pass
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(format="=== %(levelname)s === %(asctime)s === %(message)s",
+                    level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
+
+
 def get_regions(tabixfiles, chrom=None, exp_numsites=1e3):
     """Get stepsize and list of regions for tabix-indexed files. """
     
@@ -134,6 +157,33 @@ def supremum_position(tabixfiles, chrom):
     except ValueError:
         out = None
         logger.warning("Unable to calculate supremum position.")
+
+    return out
+
+def supremum_numsites(tabixfiles, chrom):
+    '''Return the least upper bound for the number of covered sites.
+    '''
+    preF = "/shares/grossniklaus.botinst.uzh/dkt/scienceCloud/okartal_marcws_processed/"
+    sites = list()
+
+    for f in tabixfiles:
+        f_modified = f.replace("myProcessed", "").lstrip('/')
+        f = preF + f_modified
+
+        tabix = subprocess.Popen(["tabix", f, chrom], stdout=subprocess.PIPE)
+        wcl = subprocess.Popen(
+            ["wc", "-l"], stdin=tabix.stdout, stdout=subprocess.PIPE)
+        tabix.stdout.close()  # Allow tabix to receive a SIGPIPE if wcl exits.
+        try:
+            site_count = int(wcl.communicate()[0])
+            sites.append(site_count)
+        except ValueError:
+            continue
+
+    try:
+        out = np.max(sites)
+    except ValueError:
+        out = None
 
     return out
 
