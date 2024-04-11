@@ -1,0 +1,160 @@
+# Ignore shannonFiles directories
+
+shannonFiles/
+shannonFiles2/
+shannonFiles3/
+shannonFiles4/
+shannonFiles5/
+
+# Ignore specific files in the paper directory
+
+paper/auto/
+paper/*.aux
+paper/*.bbl
+paper/*.bcf
+paper/*.blg
+paper/*.dvi
+paper/*.log
+paper/*.run.xml
+paper/*.synctex.gz
+
+# Ignore Snakemake files
+.snakemake/
+
+# Ignore Python bytecode files
+*.pyc
+
+# Ignore IPython Notebook checkpoints
+.ipynb_checkpoints
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+
+
+    <groupId>org.example</groupId>
+
+    <artifactId>frac-2-dec</artifactId>
+
+    <version>1.0-SNAPSHOT</version>
+
+
+
+    <properties>
+
+        <maven.compiler.source>11</maven.compiler.source>
+
+        <maven.compiler.target>11</maven.compiler.target>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    </properties>
+
+
+
+    <dependencies>
+
+        <dependency>
+
+            <groupId>org.junit.jupiter</groupId>
+
+            <artifactId>junit-jupiter-engine</artifactId>
+
+            <version>5.9.1</version>
+
+            <scope>test</scope>
+
+        </dependency>
+
+    </dependencies>
+
+
+
+    <build>
+
+        <plugins>
+
+            <plugin>
+
+                <groupId>org.jacoco</groupId>
+
+                <artifactId>jacoco-maven-plugin</artifactId>
+
+                <version>0.8.7</version>
+
+                <executions>
+
+                    <execution>
+
+                        <goals>
+
+                            <goal>prepare-agent</goal>
+
+                        </goals>
+
+                    </execution>
+
+                    <execution>
+
+                        <id>report</id>
+
+                        <phase>prepare-package</phase>
+
+                        <goals>
+
+                            <goal>report</goal>
+
+                        </goals>
+
+                    </execution>
+
+                </executions>
+
+            </plugin>
+
+
+
+            <plugin>
+
+                <groupId>org.pitest</groupId>
+
+                <artifactId>pitest-maven</artifactId>
+
+                <version>1.15.2</version>
+
+                <dependencies>
+
+                    <dependency>
+
+                        <groupId>org.pitest</groupId>
+
+                        <artifactId>pitest-junit5-plugin</artifactId>
+
+                        <version>1.2.1</version>
+
+                    </dependency>
+
+                </dependencies>
+
+            </plugin>
+
+            
+
+        </plugins>
+
+    </build>
+
+</project>
+
+
+# Ignore files starting with #
+\#*
+

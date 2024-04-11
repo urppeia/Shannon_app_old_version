@@ -1,8 +1,3 @@
-# -*- coding:utf-8 -*-
-# core.py
-
-"""Core functions.
-"""
 
 import os
 
@@ -34,7 +29,7 @@ def divergence(sample, chrom=None, data_columns=None, outfile=None, chunksize=No
 
         # data is pandas DF
         #logging.info(f"Column name of the data: {data.columns}, info: {data.info()}")
-        
+
         div = est.js_divergence(data)
 
         if div.empty:

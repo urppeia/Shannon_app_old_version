@@ -30,7 +30,11 @@
    ```
    $ conda activate shannon
    ```
-2. Run help
+   or
+   ```
+   $ source activate shannon
+   ```
+3. Run help
    ```
    $ shannon -h
    ```

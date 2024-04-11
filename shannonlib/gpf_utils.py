@@ -20,40 +20,40 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="=== %(levelname)s === %(asctime)s === %(message)s",
                     level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 
-
 def get_regions(tabixfiles, chrom=None, exp_numsites=1e3):
-    """Get stepsize and list of regions for tabix-indexed files. """
-    
-    logger.debug("Getting regions for tabix-indexed files...")
+  """Get stepsize and list of regions for tabix-indexed files. """
 
-    sup_position = supremum_position(tabixfiles, chrom)
+  logger.debug("Getting regions for tabix-indexed files...")
 
-    if sup_position is None:
-        logging.info("Skipping because chromosome is missing.")
-        return False
+  # Check for missing chromosome and handle it
+  if chrom is None:
+    logging.info("Skipping because chromosome is missing.")
+    return False
 
-    sup_numsites = supremum_numsites(tabixfiles, chrom)
+  # Calculate supremum position and number of sites
+  sup_position = supremum_position(tabixfiles, chrom)
+  sup_numsites = supremum_numsites(tabixfiles, chrom)
 
-    if sup_numsites is None or sup_numsites == 0:
-        logging.info("Skipping because there are no entries.")
-        return False
+  # Skip if no entries or invalid values
+  if sup_numsites is None or sup_numsites == 0:
+    logging.info("Skipping because there are no entries.")
+    return False
 
-    step = math.ceil(sup_position / sup_numsites * exp_numsites)
+  # Calculate step size and ensure it doesn't exceed sup_position
+  stepsize = min(math.ceil(sup_position / sup_numsites * exp_numsites), sup_position)
 
-    if step < sup_position:
-        stepsize = step
-    else:
-        stepsize = sup_position
+  # Generate positions and progress list
+  pos_start = range(0, sup_position, stepsize + 1)
+  pos_end = list(range(stepsize, sup_position, stepsize + 1)) + [sup_position]
+  progress = [round(100 * pos / sup_position, 1) for pos in pos_end]
 
-    pos_start = list(range(0, sup_position, stepsize + 1))
-    pos_end = list(range(stepsize, sup_position, stepsize + 1)) + [sup_position]
+  # Create regions as tuples
+  regions = zip([chrom] * len(pos_start), pos_start, pos_end)
 
-    progress = [round(100 * pos / sup_position, 1) for pos in pos_end]
+  logger.debug("Regions successfully retrieved.")
+  return progress, regions
 
-    regions = zip([chrom] * len(pos_start), pos_start, pos_end)
 
-    logger.debug("Regions successfully retrieved.")
-    return progress, regions
 
 
 def get_data(files, labels=None, data_columns=None, regions=None, join='outer', preset='bed'):
@@ -117,6 +117,10 @@ def get_data(files, labels=None, data_columns=None, regions=None, join='outer', 
         yield merged_dframe
 
     logger.debug("Combining tabix-indexed genome position files completed.")
+
+
+
+
 
 
 def supremum_position(tabixfiles, chrom):

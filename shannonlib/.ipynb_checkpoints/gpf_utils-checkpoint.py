@@ -1,6 +1,3 @@
-# -*- coding:utf-8 -*-
-# gpf_utils.py
-
 """Utility functions for handling genome position files.
 """
 
@@ -23,48 +20,46 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="=== %(levelname)s === %(asctime)s === %(message)s",
                     level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 
-
 def get_regions(tabixfiles, chrom=None, exp_numsites=1e3):
-    """Get stepsize and list of regions for tabix-indexed files.
-    """
+  """Get stepsize and list of regions for tabix-indexed files. """
 
-    sup_position = supremum_position(tabixfiles, chrom)
+  logger.debug("Getting regions for tabix-indexed files...")
 
-    if sup_position == None:
-        logging.info("Skipping because chromosome is missing.")
-        return False
+  # Check for missing chromosome and handle it
+  if chrom is None:
+    logging.info("Skipping because chromosome is missing.")
+    return False
 
-    sup_numsites = supremum_numsites(tabixfiles, chrom)
+  # Calculate supremum position and number of sites
+  sup_position = supremum_position(tabixfiles, chrom)
+  sup_numsites = supremum_numsites(tabixfiles, chrom)
 
-    if sup_numsites == None or sup_numsites == 0:
-        logging.info("Skipping because there are no entries.")
-        return False
+  # Skip if no entries or invalid values
+  if sup_numsites is None or sup_numsites == 0:
+    logging.info("Skipping because there are no entries.")
+    return False
 
-    step = math.ceil(sup_position / sup_numsites * exp_numsites)
+  # Calculate step size and ensure it doesn't exceed sup_position
+  stepsize = min(math.ceil(sup_position / sup_numsites * exp_numsites), sup_position)
 
-    if step < sup_position:
-        stepsize = step
-    else:
-        stepsize = sup_position
+  # Generate positions and progress list
+  pos_start = range(0, sup_position, stepsize + 1)
+  pos_end = list(range(stepsize, sup_position, stepsize + 1)) + [sup_position]
+  progress = [round(100 * pos / sup_position, 1) for pos in pos_end]
 
-    pos_start = list(
-        range(0, sup_position, stepsize + 1))
-    pos_end = list(
-        range(stepsize, sup_position, stepsize + 1)) + [sup_position]
+  # Create regions as tuples
+  regions = zip([chrom] * len(pos_start), pos_start, pos_end)
 
-    progress = [round(100 * pos / sup_position, 1) for pos in pos_end]
-
-    regions = zip([chrom] * len(pos_start), pos_start, pos_end)
-
-    return progress, regions
+  logger.debug("Regions successfully retrieved.")
+  return progress, regions
 
 
-def get_data(files, labels=None, data_columns=None, regions=None, join='outer',
-             preset='bed'):
-    """Combines tabix-indexed genome position files.
-    """
 
-    # check input arguments
+
+def get_data(files, labels=None, data_columns=None, regions=None, join='outer', preset='bed'):
+    """Combines tabix-indexed genome position files."""
+
+    logger.debug("Combining tabix-indexed genome position files...")
 
     if labels is None:
         keys = ['unit_{}'.format(pos + 1) for pos, _ in enumerate(files)]
@@ -74,8 +69,7 @@ def get_data(files, labels=None, data_columns=None, regions=None, join='outer',
         raise InputMismatchError('Number of files and labels must match!')
 
     if data_columns is None:
-        raise MissingInputError(
-            'The list of data_colums must have at least one entry!')
+        raise MissingInputError('The list of data_colums must have at least one entry!')
     elif len(data_columns) == len(files):
         pass
     elif len(data_columns) == 1:
@@ -86,20 +80,9 @@ def get_data(files, labels=None, data_columns=None, regions=None, join='outer',
             'the number of entries must match the number of files!')
 
     if preset == 'bed':
-        index = [
-            (0, '#chrom', str),
-            (1, 'start', np.int64),
-            (2, 'end', np.int64)]
+        index = [(0, '#chrom', str), (1, 'start', np.int64), (2, 'end', np.int64)]
         index_col = [i[0] for i in index]
-    if preset == 'gff':
-        # TODO
-        pass
-    if preset == 'vcf':
-        # TODO
-        pass
-    if preset == 'sam':
-        # TODO
-        pass
+    # Add handling for other presets if necessary
 
     # output columns
     names = ['sampling_unit', 'feature']
@@ -110,14 +93,13 @@ def get_data(files, labels=None, data_columns=None, regions=None, join='outer',
 
         preF = "/shares/grossniklaus.botinst.uzh/dkt/scienceCloud/okartal_marcws_processed/"
 
-        
         tabix = enumerate(
             subprocess.Popen(
                 ['tabix', f"{preF}{file_.replace('myProcessed', '').lstrip('/')}", query],
                 stdout=subprocess.PIPE,
                 universal_newlines=True)
             for file_ in files)
-        
+
         dframes = (
             pd.read_table(
                 tbx.stdout,
@@ -134,6 +116,53 @@ def get_data(files, labels=None, data_columns=None, regions=None, join='outer',
 
         yield merged_dframe
 
+    logger.debug("Combining tabix-indexed genome position files completed.")
+
+
+
+
+
+
+def supremum_position(tabixfiles, chrom):
+    """Return the least upper bound for the chrom end coordinate."""
+    
+    logger.debug("Calculating the least upper bound for the chrom end coordinate...")
+
+    end_coordinate = []
+
+    preF = "/shares/grossniklaus.botinst.uzh/dkt/scienceCloud/okartal_marcws_processed/"
+
+    for f in tabixfiles:
+        f_modified = f.replace("myProcessed", "").lstrip('/')
+        full_path = preF + f_modified
+
+        tabix = subprocess.Popen(["tabix", full_path, chrom], stdout=subprocess.PIPE)
+        tail = subprocess.Popen(["tail", "-1"], stdin=tabix.stdout, stdout=subprocess.PIPE)
+        cut = subprocess.Popen(["cut", "-f3"], stdin=tail.stdout, stdout=subprocess.PIPE)
+
+        tabix.stdout.close()
+        tail.stdout.close()
+
+        cut_output, _ = cut.communicate()
+        cut_output = cut_output.decode('utf-8').strip()
+
+        if cut_output:
+            try:
+                base_position = int(cut_output)
+                end_coordinate.append(base_position)
+            except ValueError as e:
+                logging.error(f"Failed to convert base position to int for file: {f}, Error: {e}")
+        else:
+            logging.warning(f"No data for specified chromosome in file: {f}")
+
+    try:
+        out = np.max(end_coordinate)
+        logger.debug(f"Supremum position: {out}")
+    except ValueError:
+        out = None
+        logger.warning("Unable to calculate supremum position.")
+
+    return out
 
 def supremum_numsites(tabixfiles, chrom):
     '''Return the least upper bound for the number of covered sites.
@@ -144,7 +173,7 @@ def supremum_numsites(tabixfiles, chrom):
     for f in tabixfiles:
         f_modified = f.replace("myProcessed", "").lstrip('/')
         f = preF + f_modified
-        
+
         tabix = subprocess.Popen(["tabix", f, chrom], stdout=subprocess.PIPE)
         wcl = subprocess.Popen(
             ["wc", "-l"], stdin=tabix.stdout, stdout=subprocess.PIPE)
@@ -163,65 +192,11 @@ def supremum_numsites(tabixfiles, chrom):
     return out
 
 
-def supremum_position(tabixfiles, chrom):
-    """Return the least upper bound for the chrom end coordinate."""
-
-    end_coordinate = []
-
-    preF = "/shares/grossniklaus.botinst.uzh/dkt/scienceCloud/okartal_marcws_processed/"
-
-    for f in tabixfiles:
-        f_modified = f.replace("myProcessed", "").lstrip('/')
-        full_path = preF + f_modified
-
-        #print('\033[93m' + "THIS IS PATH", full_path + '\x1b[0m')
-        
-        # Execute tabix and pipe its output to tail
-        tabix = subprocess.Popen(["tabix", full_path, chrom], stdout=subprocess.PIPE)
-        tail = subprocess.Popen(["tail", "-1"], stdin=tabix.stdout, stdout=subprocess.PIPE)
-        cut = subprocess.Popen(["cut", "-f3"], stdin=tail.stdout, stdout=subprocess.PIPE)
-        
-        # Close the stdout of tabix and tail to signal EOF to the subprocesses
-        tabix.stdout.close()
-        tail.stdout.close()
-        
-        # Wait for the cut process to finish and capture its output
-        cut_output, _ = cut.communicate()
-        cut_output = cut_output.decode('utf-8').strip()
-        
-        if cut_output:  # Check if the output is not empty
-            try:
-                base_position = int(cut_output)  
-                end_coordinate.append(base_position)  
-            except ValueError as e:
-                print(f"Failed to convert base position to int for file: {f}, Error: {e}")
-        else:
-            print(f"No data for specified chromosome in file: {f}")
-            
-    
-    print("End Coordinates:", end_coordinate)
-    try:
-        out = np.max(end_coordinate)
-    except ValueError:
-        out = None
-
-    #print(out)
-
-    return out
-
-
 def groupby(by, metadata=None, data=None):
-    """Group merged GPF data frame by levels of a factor.
-    """
+    """Group merged GPF data frame by levels of a factor. """
+    
+    logger.debug("Grouping merged GPF data frame by levels of a factor...")
 
     mapping = metadata.set_index('label')[by].to_dict()
 
     return data.groupby(mapping, axis=1, level=0)
-
-
-# def js_divergence_pool(parameter_list):
-#     """
-#     """
-#     #TODO add ungrouped df to list for getting J_IT
-#     with Pool(cpu_count()) as pool:
-#         return pool.map(js_divergence, [group for key, group in groups])
