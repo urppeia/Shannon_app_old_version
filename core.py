@@ -10,7 +10,7 @@ logging.basicConfig(format="=== %(levelname)s === %(asctime)s === %(message)s",
                     level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 
 
-
+# it takes csv file, same is csv 
 def divergence(sample, chrom=None, data_columns=None, outfile=None, chunksize=None):
     """Computes within-group divergence for population.
     """

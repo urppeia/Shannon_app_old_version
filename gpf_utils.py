@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="=== %(levelname)s === %(asctime)s === %(message)s",
                     level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 
+
+# tabixfiles are urls from csv file basically paths for bed files 
 def get_regions(tabixfiles, chrom=None, exp_numsites=1e3):
   """Get stepsize and list of regions for tabix-indexed files. """
 
@@ -164,6 +166,8 @@ def supremum_position(tabixfiles, chrom):
 
     return out
 
+
+# tabixfiles = csv url bed files as array
 def supremum_numsites(tabixfiles, chrom):
     '''Return the least upper bound for the number of covered sites.
     '''
