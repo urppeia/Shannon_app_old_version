@@ -24,7 +24,7 @@ logging.basicConfig(format="=== %(levelname)s === %(asctime)s === %(message)s",
 def get_regions(tabixfiles, chrom=None, exp_numsites=1e3):
     """Get stepsize and list of regions for tabix-indexed files. """
     
-    logger.debug("Getting regions for tabix-indexed files...")
+    #logger.debug("Getting regions for tabix-indexed files...")
 
     sup_position = supremum_position(tabixfiles, chrom)
 
@@ -52,14 +52,14 @@ def get_regions(tabixfiles, chrom=None, exp_numsites=1e3):
 
     regions = zip([chrom] * len(pos_start), pos_start, pos_end)
 
-    logger.debug("Regions successfully retrieved.")
+    #logger.debug("Regions successfully retrieved.")
     return progress, regions
 
 
 def get_data(files, labels=None, data_columns=None, regions=None, join='outer', preset='bed'):
     """Combines tabix-indexed genome position files."""
 
-    logger.debug("Combining tabix-indexed genome position files...")
+    #logger.debug("Combining tabix-indexed genome position files...")
 
     if labels is None:
         keys = ['unit_{}'.format(pos + 1) for pos, _ in enumerate(files)]
@@ -116,13 +116,13 @@ def get_data(files, labels=None, data_columns=None, regions=None, join='outer', 
 
         yield merged_dframe
 
-    logger.debug("Combining tabix-indexed genome position files completed.")
+    #logger.debug("Combining tabix-indexed genome position files completed.")
 
 
 def supremum_position(tabixfiles, chrom):
     """Return the least upper bound for the chrom end coordinate."""
     
-    logger.debug("Calculating the least upper bound for the chrom end coordinate...")
+    #logger.debug("Calculating the least upper bound for the chrom end coordinate...")
 
     end_coordinate = []
 
@@ -153,7 +153,7 @@ def supremum_position(tabixfiles, chrom):
 
     try:
         out = np.max(end_coordinate)
-        logger.debug(f"Supremum position: {out}")
+        #logger.debug(f"Supremum position: {out}")
     except ValueError:
         out = None
         logger.warning("Unable to calculate supremum position.")
@@ -191,7 +191,7 @@ def supremum_numsites(tabixfiles, chrom):
 def groupby(by, metadata=None, data=None):
     """Group merged GPF data frame by levels of a factor. """
     
-    logger.debug("Grouping merged GPF data frame by levels of a factor...")
+    #logger.debug("Grouping merged GPF data frame by levels of a factor...")
 
     mapping = metadata.set_index('label')[by].to_dict()
 

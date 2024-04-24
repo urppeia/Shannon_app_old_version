@@ -36,20 +36,29 @@ file_names=(
     "metadata_CpG.Col-0.wt.whole-organism.csv"
 )
 
-if [ ! -d "shannonFiles3" ]; then
-    mkdir "shannonFiles3"
-fi
 
-for input_file in "${file_names[@]}"; do
-    output_file="shannonFiles3/output_${input_file}"
-    sequence=3
+
+for chrom in {1..5}; do  
+
+  # Define the directory
+  dir="/shares/grossniklaus.botinst.uzh/eharputluoglu/newShannonFilesDir/shannonFiles${chrom}"
+  
+  # Check if the directory doesn't exist and create it
+  if [ ! -d "$dir" ]; then
+    mkdir -p "$dir"
+  fi
+
+  # Loop through all files
+  for input_file in "${file_names[@]}"; do
+    output_file="$dir/output_${input_file}"
 
     # Only run the command if the output file doesn't already exist
     if [ ! -f "$output_file" ]; then
-        ./shannon div -m "../meta-methylome/results/tables/metadata/${input_file}" -o "${output_file}" -s "$sequence" -c 4 5 6 -n cov m um
+      ./shannon div -m "../meta-methylome/results/tables/metadata/${input_file}" -o "${output_file}" -s "$chrom" -c 5 6 -n 5mC C
     else
-        echo "File $output_file exists!"
+      echo "File $output_file exists!"
     fi
+  done
 done
 
 echo "All Files are created!"
